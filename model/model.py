@@ -1,14 +1,14 @@
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import lightning as L
 from torch import Tensor
-from torch.optim.adam import Adam
-from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
+from torch.optim.adamw import AdamW
 from torch.optim.optimizer import Optimizer
+from transformers import get_cosine_schedule_with_warmup
 
 from data.utils import LowLightSample
 from model.blocks.enhancer import Enhancer
-from model.loss import MeanAbsoluteError, MeanSquaredError, StructuralSimilarity
+from model.loss import MeanAbsoluteError, MeanSquaredError
 from utils.metrics import ImageQualityMetrics
 
 
@@ -18,42 +18,39 @@ class LowLightEnhancerLightning(L.LightningModule):
         self.save_hyperparameters(hparams)
 
         self.model: Enhancer = Enhancer(
-            hidden_channels=self.hparams.get("hidden_channels", 64),
-            num_resolution=self.hparams.get("num_resolution", 4),
+            channels=self.hparams.get("channels", 3),
+            kernel_size=self.hparams.get("kernel_size", 15),
+            sigma=self.hparams.get("sigma", 5),
+            embed_dim=self.hparams.get("embed_dim", 32),
+            num_heads=self.hparams.get("num_heads", 2),
+            mlp_ratio=self.hparams.get("mlp_ratio", 2),
+            num_resolution=self.hparams.get("num_resolution", 2),
             dropout_ratio=self.hparams.get("dropout_ratio", 0.2),
-            offset=self.hparams.get("offset", 0.5),
-            cutoff=self.hparams.get("cutoff", self.hparams.get("raw_cutoff", 0.1)),
-            trainable=self.hparams.get("trainable", False),
         )
 
         self.mae_loss: MeanAbsoluteError = MeanAbsoluteError().eval()
         self.mse_loss: MeanSquaredError = MeanSquaredError().eval()
-        self.ssim_loss: StructuralSimilarity = StructuralSimilarity().eval()
 
         self.metric: ImageQualityMetrics = ImageQualityMetrics().eval()
 
     def forward(
         self,
         low: Tensor,
-    ) -> dict[str, dict[str, Tensor]]:
+    ) -> Tensor:
         return self.model(low)
 
     def _calculate_loss(
         self,
-        outputs: dict[str, dict[str, Tensor]],
+        outputs: Tensor,
         target: Tensor,
     ) -> dict[str, Tensor]:
-        pred_img: Tensor = outputs["enhanced"]["rgb"]
-
-        loss_mae: Tensor = self.mae_loss(pred_img, target)
-        loss_mse: Tensor = self.mse_loss(pred_img, target)
-        loss_ssim: Tensor = self.ssim_loss(pred_img, target)
-        loss_total: Tensor = loss_mae + loss_mse + loss_ssim
+        loss_mae: Tensor = self.mae_loss(outputs, target)
+        loss_mse: Tensor = self.mse_loss(outputs, target)
+        loss_total: Tensor = loss_mae + loss_mse
 
         loss_dict: dict[str, Tensor] = {
             "mae": loss_mae,
             "mse": loss_mse,
-            "ssim": loss_ssim,
             "total": loss_total,
         }
         return loss_dict
@@ -61,7 +58,7 @@ class LowLightEnhancerLightning(L.LightningModule):
     def _shared_step(
         self,
         batch: LowLightSample,
-    ) -> tuple[dict[str, dict[str, Tensor]], dict[str, Tensor]]:
+    ) -> tuple[Tensor, dict[str, Tensor]]:
         low_img, high_img = batch
         outputs = self.forward(low=low_img)
         loss_dict = self._calculate_loss(outputs=outputs, target=high_img)
@@ -70,24 +67,14 @@ class LowLightEnhancerLightning(L.LightningModule):
     def _logging(
         self,
         stage: Literal["train", "valid"],
-        outputs: dict[str, dict[str, Tensor]],
+        outputs: Tensor,
         loss_dict: dict[str, Tensor],
         batch_idx: int,
     ) -> None:
         if batch_idx % 50 != 0:
             return
 
-        low = outputs["low"]
-        enhanced = outputs["enhanced"]
-
-        for i, (key, val) in enumerate(iterable=enhanced.items()):
-            self.logger.experiment.add_images(
-                f"{stage}/enhanced/{i + 1}_{key}", val, self.global_step
-            )
-        for i, (key, val) in enumerate(iterable=low.items()):
-            self.logger.experiment.add_images(
-                f"{stage}/low/{i + 1}_{key}", val, self.global_step
-            )
+        self.logger.experiment.add_images("results", outputs, self.global_step)
 
         logs: dict[str, Tensor] = {}
         for i, (key, val) in enumerate(iterable=loss_dict.items()):
@@ -136,15 +123,15 @@ class LowLightEnhancerLightning(L.LightningModule):
         low_img, high_img = batch
 
         outputs = self.forward(low=low_img)
-        metrics = self.metric.full(preds=outputs["enhanced"]["rgb"], targets=high_img)
+        metrics = self.metric.full(preds=outputs, targets=high_img)
 
         self.log_dict(
             dictionary={
-                "test/1_PSNR": metrics["PSNR"],
-                "test/2_SSIM": metrics["SSIM"],
-                "test/3_LPIPS": metrics["LPIPS"],
-                "test/4_NIQE": metrics["NIQE"],
-                "test/5_BRISQUE": metrics["BRISQUE"],
+                "test/01_PSNR": metrics["PSNR"],
+                "test/02_SSIM": metrics["SSIM"],
+                "test/03_LPIPS": metrics["LPIPS"],
+                "test/04_NIQE": metrics["NIQE"],
+                "test/05_BRISQUE": metrics["BRISQUE"],
             },
             prog_bar=True,
         )
@@ -154,16 +141,16 @@ class LowLightEnhancerLightning(L.LightningModule):
         batch: LowLightSample,
         batch_idx: int,
         dataloader_idx: int = 0,
-    ) -> list[Tensor]:
+    ) -> Tensor:
         low_img, _ = batch
 
         results = self.forward(low=low_img)
-        return [results["enhanced"]["rgb"]]
+        return results
 
     def configure_optimizers(self) -> tuple[list[Optimizer], list[dict[str, Any]]]:
-        lr = float(self.hparams.get("lr", 1e-3))
+        lr = float(self.hparams.get("lr", 1e-4))
 
-        optimizer: Optimizer = Adam(
+        optimizer: Optimizer = AdamW(
             params=self.parameters(),
             lr=lr,
             betas=self.hparams.get("betas", (0.9, 0.999)),
@@ -171,29 +158,21 @@ class LowLightEnhancerLightning(L.LightningModule):
             weight_decay=self.hparams.get("weight_decay", 0.0),
         )
 
-        total_epochs: int = int(self.hparams.get("max_epochs", 100))
-        warmup_epochs: int = max(1, int(0.05 * total_epochs))
+        total_training_steps = cast(int, self.trainer.estimated_stepping_batches)
 
-        warmup = LinearLR(
+        warmup_ratio = 0.05
+        num_warmup_steps = max(1, int(total_training_steps * warmup_ratio))
+
+        scheduler = get_cosine_schedule_with_warmup(
             optimizer=optimizer,
-            start_factor=0.1,
-            end_factor=1.0,
-            total_iters=warmup_epochs,
-        )
-        cosine = CosineAnnealingLR(
-            optimizer=optimizer,
-            T_max=total_epochs - warmup_epochs,
-            eta_min=lr * 0.01,
-        )
-        scheduler = SequentialLR(
-            optimizer=optimizer,
-            schedulers=[warmup, cosine],
-            milestones=[warmup_epochs],
+            num_warmup_steps=num_warmup_steps,
+            num_training_steps=total_training_steps,
         )
 
         sched_cfg: dict[str, Any] = {
             "scheduler": scheduler,
-            "interval": "epoch",
+            "interval": "step",
             "frequency": 1,
         }
+
         return [optimizer], [sched_cfg]

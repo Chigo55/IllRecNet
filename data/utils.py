@@ -1,3 +1,4 @@
+import random
 from pathlib import Path
 from typing import Tuple, cast
 
@@ -10,10 +11,17 @@ LowLightSample = Tuple[Tensor, Tensor]
 
 
 class LowLightDataset(Dataset[LowLightSample]):
-    def __init__(self, path: str | Path, image_size: int) -> None:
+    def __init__(
+        self,
+        path: str | Path,
+        image_size: int,
+        augment: bool,
+    ) -> None:
         super().__init__()
         self.path: Path = Path(path)
         self.image_size: int = image_size
+        self.augment: bool = augment
+
         self.transform: transforms.Compose = transforms.Compose(
             transforms=[
                 transforms.Resize(size=(self.image_size, self.image_size)),
@@ -30,14 +38,35 @@ class LowLightDataset(Dataset[LowLightSample]):
     def __len__(self) -> int:
         return len(self.low_datas)
 
-    def __getitem__(self, index: int) -> LowLightSample:
+    def __getitem__(
+        self,
+        index: int,
+    ) -> LowLightSample:
         low_data: Path = self.low_datas[index]
         high_data: Path = self.high_path / low_data.name
 
         low_image: Image.Image = Image.open(fp=low_data).convert(mode="RGB")
         high_image: Image.Image = Image.open(fp=high_data).convert(mode="RGB")
 
+        if self.augment:
+            low_image, high_image = self._pair_augment(
+                low_image=low_image, high_image=high_image
+            )
+
         low_tensor: Tensor = cast(Tensor, self.transform(img=low_image))
         high_tensor: Tensor = cast(Tensor, self.transform(img=high_image))
-
         return low_tensor, high_tensor
+
+    def _pair_augment(
+        self,
+        low_image: Image.Image,
+        high_image: Image.Image,
+    ) -> tuple[Image.Image, Image.Image]:
+        if random.random() < 0.5:
+            low_image = low_image.transpose(method=Image.FLIP_LEFT_RIGHT)
+            high_image = high_image.transpose(method=Image.FLIP_LEFT_RIGHT)
+
+        if random.random() < 0.5:
+            low_image = low_image.transpose(method=Image.FLIP_TOP_BOTTOM)
+            high_image = high_image.transpose(method=Image.FLIP_TOP_BOTTOM)
+        return low_image, high_image
