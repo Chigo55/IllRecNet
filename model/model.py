@@ -1,12 +1,12 @@
 from typing import Any, Literal, cast
 
 import lightning as L
+import torch
 from torch import Tensor
 from torch.optim.adamw import AdamW
 from torch.optim.optimizer import Optimizer
 from transformers import get_cosine_schedule_with_warmup
 
-from data.utils import LowLightSample
 from model.blocks.enhancer import Enhancer
 from model.loss import MeanAbsoluteError, MeanSquaredError
 from utils.metrics import ImageQualityMetrics
@@ -57,11 +57,13 @@ class LowLightEnhancerLightning(L.LightningModule):
 
     def _shared_step(
         self,
-        batch: LowLightSample,
+        batch: tuple[Tensor, Tensor],
     ) -> tuple[Tensor, dict[str, Tensor]]:
         low_img, high_img = batch
         outputs = self.forward(low=low_img)
-        loss_dict = self._calculate_loss(outputs=outputs, target=high_img)
+        loss_dict = self._calculate_loss(
+            outputs=torch.clip(input=outputs, min=0, max=1), target=high_img
+        )
         return outputs, loss_dict
 
     def _logging(
@@ -74,7 +76,7 @@ class LowLightEnhancerLightning(L.LightningModule):
         if batch_idx % 50 != 0:
             return
 
-        self.logger.experiment.add_images("results", outputs, self.global_step)
+        self.logger.experiment.add_images(f"{stage}/results", outputs, self.global_step)
 
         logs: dict[str, Tensor] = {}
         for i, (key, val) in enumerate(iterable=loss_dict.items()):
@@ -84,7 +86,7 @@ class LowLightEnhancerLightning(L.LightningModule):
 
     def training_step(
         self,
-        batch: LowLightSample,
+        batch: tuple[Tensor, Tensor],
         batch_idx: int,
     ) -> Tensor:
         outputs, loss_dict = self._shared_step(batch=batch)
@@ -100,7 +102,7 @@ class LowLightEnhancerLightning(L.LightningModule):
 
     def validation_step(
         self,
-        batch: LowLightSample,
+        batch: tuple[Tensor, Tensor],
         batch_idx: int,
     ) -> Tensor:
         outputs, loss_dict = self._shared_step(batch=batch)
@@ -116,14 +118,16 @@ class LowLightEnhancerLightning(L.LightningModule):
 
     def test_step(
         self,
-        batch: LowLightSample,
+        batch: tuple[Tensor, Tensor],
         batch_idx: int,
         dataloader_idx: int = 0,
     ) -> None:
         low_img, high_img = batch
 
         outputs = self.forward(low=low_img)
-        metrics = self.metric.full(preds=outputs, targets=high_img)
+        metrics = self.metric.full(
+            preds=torch.clip(input=outputs, min=0, max=1), targets=high_img
+        )
 
         self.log_dict(
             dictionary={
@@ -138,14 +142,14 @@ class LowLightEnhancerLightning(L.LightningModule):
 
     def predict_step(
         self,
-        batch: LowLightSample,
+        batch: tuple[Tensor, Tensor],
         batch_idx: int,
         dataloader_idx: int = 0,
     ) -> Tensor:
         low_img, _ = batch
 
         results = self.forward(low=low_img)
-        return results
+        return torch.clip(input=results, min=0, max=1)
 
     def configure_optimizers(self) -> tuple[list[Optimizer], list[dict[str, Any]]]:
         lr = float(self.hparams.get("lr", 1e-4))
@@ -155,12 +159,12 @@ class LowLightEnhancerLightning(L.LightningModule):
             lr=lr,
             betas=self.hparams.get("betas", (0.9, 0.999)),
             eps=self.hparams.get("eps", 1e-8),
-            weight_decay=self.hparams.get("weight_decay", 0.0),
+            weight_decay=self.hparams.get("weight_decay", 0.1),
         )
 
         total_training_steps = cast(int, self.trainer.estimated_stepping_batches)
 
-        warmup_ratio = 0.05
+        warmup_ratio = 0.1
         num_warmup_steps = max(1, int(total_training_steps * warmup_ratio))
 
         scheduler = get_cosine_schedule_with_warmup(

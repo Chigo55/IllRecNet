@@ -1,7 +1,10 @@
+import os
 from typing import Any, Final
 
 from engine.engine import LightningEngine
 from model.model import LowLightEnhancerLightning
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 
 def get_hparams() -> dict[str, Any]:
@@ -20,7 +23,7 @@ def get_hparams() -> dict[str, Any]:
         "precision": "32-true",
         "log_every_n_steps": 5,
         "log_dir": "runs/",
-        "experiment_name": "test/",
+        "experiment_name": "bench/",
         "inference": "inference/",
         "patience": 20,
         "hidden_channels": 64,
@@ -35,9 +38,7 @@ def get_hparams() -> dict[str, Any]:
     return hparams
 
 
-DEFAULT_CHECKPOINT: Final[str] = (
-    "./runs/test/lightning_logs/version_0/checkpoints/best-epoch=81.ckpt"
-)
+DEFAULT_CHECKPOINT: Final[str] = "runs/train/version_2/checkpoints/best.ckpt"
 
 
 def main() -> None:

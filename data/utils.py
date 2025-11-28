@@ -1,33 +1,25 @@
 import random
 from pathlib import Path
-from typing import Tuple, cast
 
 from PIL import Image
 from torch import Tensor
 from torch.utils.data import Dataset
-from torchvision import transforms
-
-LowLightSample = Tuple[Tensor, Tensor]
+from torchvision.transforms import functional as F
 
 
-class LowLightDataset(Dataset[LowLightSample]):
+class LowLightDataset(Dataset[tuple[Tensor, Tensor]]):
     def __init__(
         self,
         path: str | Path,
         image_size: int,
         augment: bool,
+        crop: bool,
     ) -> None:
         super().__init__()
         self.path: Path = Path(path)
         self.image_size: int = image_size
         self.augment: bool = augment
-
-        self.transform: transforms.Compose = transforms.Compose(
-            transforms=[
-                transforms.Resize(size=(self.image_size, self.image_size)),
-                transforms.ToTensor(),
-            ]
-        )
+        self.crop: bool = crop
 
         self.low_path: Path = self.path / "low"
         self.high_path: Path = self.path / "high"
@@ -41,7 +33,7 @@ class LowLightDataset(Dataset[LowLightSample]):
     def __getitem__(
         self,
         index: int,
-    ) -> LowLightSample:
+    ) -> tuple[Tensor, Tensor]:
         low_data: Path = self.low_datas[index]
         high_data: Path = self.high_path / low_data.name
 
@@ -50,23 +42,74 @@ class LowLightDataset(Dataset[LowLightSample]):
 
         if self.augment:
             low_image, high_image = self._pair_augment(
-                low_image=low_image, high_image=high_image
+                low=low_image,
+                high=high_image,
             )
 
-        low_tensor: Tensor = cast(Tensor, self.transform(img=low_image))
-        high_tensor: Tensor = cast(Tensor, self.transform(img=high_image))
-        return low_tensor, high_tensor
+        if self.crop:
+            low_image, high_image = self._pair_random_crop(
+                low=low_image,
+                high=high_image,
+                patch_size=self.image_size,
+            )
+
+        return F.to_tensor(pic=low_image), F.to_tensor(pic=high_image)
 
     def _pair_augment(
         self,
-        low_image: Image.Image,
-        high_image: Image.Image,
+        low: Image.Image,
+        high: Image.Image,
     ) -> tuple[Image.Image, Image.Image]:
         if random.random() < 0.5:
-            low_image = low_image.transpose(method=Image.FLIP_LEFT_RIGHT)
-            high_image = high_image.transpose(method=Image.FLIP_LEFT_RIGHT)
+            low = F.hflip(img=low)  # type: ignore
+            high = F.hflip(img=high)  # type: ignore
 
         if random.random() < 0.5:
-            low_image = low_image.transpose(method=Image.FLIP_TOP_BOTTOM)
-            high_image = high_image.transpose(method=Image.FLIP_TOP_BOTTOM)
-        return low_image, high_image
+            low = F.vflip(img=low)  # type: ignore
+            high = F.vflip(img=high)  # type: ignore
+
+        return low, high
+
+    def _pair_random_crop(
+        self,
+        low: Image.Image,
+        high: Image.Image,
+        patch_size: int,
+    ) -> tuple[Image.Image, Image.Image]:
+        w, h = low.size
+
+        if w < patch_size or h < patch_size:
+            low = F.resize(
+                img=low,  # type: ignore
+                size=[patch_size, patch_size],
+                interpolation=F.InterpolationMode.BICUBIC,
+            )
+            high = F.resize(
+                img=high,  # type: ignore
+                size=[patch_size, patch_size],
+                interpolation=F.InterpolationMode.BICUBIC,
+            )
+            return low, high
+
+        if w == patch_size and h == patch_size:
+            return low, high
+
+        left = random.randint(a=0, b=w - patch_size)
+        top = random.randint(a=0, b=h - patch_size)
+
+        low = F.crop(
+            img=low,  # type: ignore
+            top=top,
+            left=left,
+            height=patch_size,
+            width=patch_size,
+        )
+        high = F.crop(
+            img=high,  # type: ignore
+            top=top,
+            left=left,
+            height=patch_size,
+            width=patch_size,
+        )
+
+        return low, high

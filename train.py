@@ -1,36 +1,42 @@
+import os
 import random
 from typing import Any
 
 from engine.engine import LightningEngine
 from model.model import LowLightEnhancerLightning
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+
 
 def get_hparams() -> dict[str, Any]:
     hparams: dict[str, Any] = {
+        "seed": 42,
+        "max_epochs": 100,
+        "accelerator": "auto",
+        "devices": 1,
+        "precision": "16-mixed",
+        "log_every_n_steps": 5,
+        "log_dir": "runs/",
+        "experiment_name": "train/",
+        "inference": "inference/",
+        "monitor_metric": "valid/3_total",
+        "monitor_mode": "min/",
+        "patience": 20,
         "train_data_path": "data/1_train",
         "valid_data_path": "data/2_valid",
         "bench_data_path": "data/3_bench",
         "infer_data_path": "data/4_infer",
         "image_size": 256,
-        "batch_size": 8,
+        "batch_size": 16,
         "num_workers": 10,
-        "seed": 42,
-        "max_epochs": 100,
-        "accelerator": "gpu",
-        "devices": 1,
-        "precision": "16-mixed",
-        "log_every_n_steps": 5,
-        "log_dir": "runs/",
-        "experiment_name": "test/",
-        "inference": "inference/",
-        "patience": 20,
-        "hidden_channels": 16,
-        "num_resolution": 2,
+        "channels": 3,
+        "kernel_size": 15,
+        "sigma": 5,
+        "embed_dim": 64,
+        "num_heads": 8,
+        "mlp_ratio": 4,
+        "num_resolution": 4,
         "dropout_ratio": 0.2,
-        "offset": 0.5,
-        "cutoff": 0.25,
-        "trainable": False,
-        "device": "cuda",
     }
     return hparams
 
