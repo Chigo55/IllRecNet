@@ -5,7 +5,7 @@ from typing import Any
 from engine.engine import LightningEngine
 from model.model import LowLightEnhancerLightning
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 
 def get_hparams() -> dict[str, Any]:
@@ -20,7 +20,7 @@ def get_hparams() -> dict[str, Any]:
         "experiment_name": "train/",
         "inference": "inference/",
         "monitor_metric": "valid/3_total",
-        "monitor_mode": "min/",
+        "monitor_mode": "min",
         "patience": 20,
         "train_data_path": "data/1_train",
         "valid_data_path": "data/2_valid",
@@ -32,10 +32,10 @@ def get_hparams() -> dict[str, Any]:
         "channels": 3,
         "kernel_size": 15,
         "sigma": 5,
-        "embed_dim": 64,
-        "num_heads": 8,
-        "mlp_ratio": 4,
-        "num_resolution": 4,
+        "embed_dim": 16,
+        "num_heads": 2,
+        "mlp_ratio": 1,
+        "num_resolution": 2,
         "dropout_ratio": 0.2,
     }
     return hparams
