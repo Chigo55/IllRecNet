@@ -1,7 +1,8 @@
-from typing import Any, Literal, cast
+from typing import Any, Literal, Sequence
 
 import lightning as L
 import torch
+from lightning.pytorch.utilities.types import LRSchedulerConfig
 from torch import Tensor
 from torch.optim.adamw import AdamW
 from torch.optim.optimizer import Optimizer
@@ -162,7 +163,7 @@ class LowLightEnhancerLightning(L.LightningModule):
             weight_decay=self.hparams.get("weight_decay", 0.1),
         )
 
-        total_training_steps = cast(int, self.trainer.estimated_stepping_batches)
+        total_training_steps = int(self.trainer.estimated_stepping_batches)
 
         warmup_ratio = 0.1
         num_warmup_steps = max(1, int(total_training_steps * warmup_ratio))

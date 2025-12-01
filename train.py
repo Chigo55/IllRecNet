@@ -5,7 +5,7 @@ from typing import Any
 from engine.engine import LightningEngine
 from model.model import LowLightEnhancerLightning
 
-# os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 
 def get_hparams() -> dict[str, Any]:
@@ -27,7 +27,7 @@ def get_hparams() -> dict[str, Any]:
         "bench_data_path": "data/3_bench",
         "infer_data_path": "data/4_infer",
         "image_size": 256,
-        "batch_size": 16,
+        "batch_size": 32,
         "num_workers": 10,
         "channels": 3,
         "kernel_size": 15,
