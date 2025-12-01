@@ -180,6 +180,7 @@ data/3_bench/*
 data/4_infer/*
 data/database/*
 runs/*
+test/*
 .vscode/
 
 !**/.gitkeep

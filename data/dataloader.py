@@ -36,12 +36,12 @@ class LowLightDataModule(L.LightningDataModule):
     def setup(self, stage: str | None = None) -> None:
         if stage in (None, "fit"):
             self.train_datasets = self._set_dataset(
-                data_dir=self.train_dir, augment=True, crop=True
+                data_dir=self.train_dir, augment=True, crop=False
             )
 
         if stage in (None, "fit", "validate"):
             self.valid_datasets = self._set_dataset(
-                data_dir=self.valid_dir, augment=False, crop=True
+                data_dir=self.valid_dir, augment=False, crop=False
             )
 
         if stage in (None, "test"):

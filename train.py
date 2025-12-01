@@ -27,12 +27,12 @@ def get_hparams() -> dict[str, Any]:
         "bench_data_path": "data/3_bench",
         "infer_data_path": "data/4_infer",
         "image_size": 256,
-        "batch_size": 16,
+        "batch_size": 1,
         "num_workers": 10,
         "channels": 3,
         "kernel_size": 15,
         "sigma": 5,
-        "embed_dim": 16,
+        "embed_dim": 8,
         "num_heads": 2,
         "mlp_ratio": 1,
         "num_resolution": 2,
@@ -52,8 +52,6 @@ def main() -> None:
             hparams=hparams,
         )
         engine.train()
-        engine.valid()
-        engine.bench()
 
 
 if __name__ == "__main__":
