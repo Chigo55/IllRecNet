@@ -36,7 +36,7 @@ class LowLightDataModule(L.LightningDataModule):
     def setup(self, stage: str | None = None) -> None:
         if stage in (None, "fit"):
             self.train_datasets = self._set_dataset(
-                data_dir=self.train_dir, augment=True, crop=False
+                data_dir=self.train_dir, augment=True, crop=True
             )
 
         if stage in (None, "fit", "validate"):
@@ -79,14 +79,20 @@ class LowLightDataModule(L.LightningDataModule):
         datasets: list[LowLightDataset],
         concat: bool = True,
         shuffle: bool = True,
+        batch_size: int | None = None,
     ) -> DataLoader[tuple[Tensor, Tensor]] | list[DataLoader[tuple[Tensor, Tensor]]]:
+        batch_size = batch_size if batch_size is not None else self.batch_size
+
         loader_kwargs = {
-            "batch_size": self.batch_size,
+            "batch_size": batch_size,
             "shuffle": shuffle,
             "num_workers": self.num_workers,
             "persistent_workers": self.num_workers > 0,
             "pin_memory": True,
         }
+
+        if not datasets:
+            return []
 
         if concat:
             return DataLoader(dataset=ConcatDataset(datasets=datasets), **loader_kwargs)
@@ -113,6 +119,7 @@ class LowLightDataModule(L.LightningDataModule):
             datasets=self.valid_datasets,
             concat=concat,
             shuffle=shuffle,
+            batch_size=1
         )
 
     def test_dataloader(
@@ -124,6 +131,7 @@ class LowLightDataModule(L.LightningDataModule):
             datasets=self.bench_datasets,
             concat=concat,
             shuffle=shuffle,
+            batch_size=1
         )
 
     def predict_dataloader(
@@ -135,4 +143,5 @@ class LowLightDataModule(L.LightningDataModule):
             datasets=self.infer_datasets,
             concat=concat,
             shuffle=shuffle,
+            batch_size=1
         )
