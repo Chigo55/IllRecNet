@@ -32,7 +32,7 @@ def get_params() -> dict[str, Any]:
                 "accelerator": "auto",
                 "devices": 1,
                 "precision": "16-mixed",
-                "max_epochs": 1,
+                "max_epochs": 100,
                 "log_every_n_steps": 5,
             }
         },
