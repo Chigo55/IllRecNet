@@ -116,10 +116,7 @@ class LowLightDataModule(L.LightningDataModule):
         shuffle: bool = False,
     ) -> DataLoader[tuple[Tensor, Tensor]] | list[DataLoader[tuple[Tensor, Tensor]]]:
         return self._set_dataloader(
-            datasets=self.valid_datasets,
-            concat=concat,
-            shuffle=shuffle,
-            batch_size=1
+            datasets=self.valid_datasets, concat=concat, shuffle=shuffle, batch_size=1
         )
 
     def test_dataloader(
@@ -128,10 +125,7 @@ class LowLightDataModule(L.LightningDataModule):
         shuffle: bool = False,
     ) -> DataLoader[tuple[Tensor, Tensor]] | list[DataLoader[tuple[Tensor, Tensor]]]:
         return self._set_dataloader(
-            datasets=self.bench_datasets,
-            concat=concat,
-            shuffle=shuffle,
-            batch_size=1
+            datasets=self.bench_datasets, concat=concat, shuffle=shuffle, batch_size=1
         )
 
     def predict_dataloader(
@@ -140,8 +134,5 @@ class LowLightDataModule(L.LightningDataModule):
         shuffle: bool = False,
     ) -> DataLoader[tuple[Tensor, Tensor]] | list[DataLoader[tuple[Tensor, Tensor]]]:
         return self._set_dataloader(
-            datasets=self.infer_datasets,
-            concat=concat,
-            shuffle=shuffle,
-            batch_size=1
+            datasets=self.infer_datasets, concat=concat, shuffle=shuffle, batch_size=1
         )

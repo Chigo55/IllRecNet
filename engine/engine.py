@@ -1,13 +1,6 @@
 from typing import Any
 
-from lightning import LightningModule, Trainer, seed_everything
-from lightning.pytorch.callbacks import (
-    Callback,
-    EarlyStopping,
-    LearningRateMonitor,
-    ModelCheckpoint,
-)
-from lightning.pytorch.loggers import TensorBoardLogger
+from lightning import LightningModule, Trainer
 
 from engine.runner import (
     LightningBenchmarker,
@@ -22,72 +15,23 @@ class LightningEngine:
     def __init__(
         self,
         model_class: type[LightningModule],
-        hparams: dict[str, Any],
-        checkpoint_path: str | None = None,
+        checkpoint_path: str | None,
+        params: dict[str, dict[str, Any]],
     ) -> None:
-        self.hparams: dict[str, Any] = hparams
         self.checkpoint_path: str | None = checkpoint_path
-
-        seed_everything(seed=self.hparams.get("seed", 42), workers=True)
+        self.params: dict[str, dict[str, Any]] = params
 
         if checkpoint_path:
             print(f"Loaded model from: {self.checkpoint_path}")
             self.model = model_class.load_from_checkpoint(
                 checkpoint_path=checkpoint_path,
-                hparams=self.hparams,
+                params=self.params,
             )
         else:
             print("Initialized model from scratch.")
-            self.model = model_class(hparams=self.hparams)
-
-        self.logger: TensorBoardLogger = self._build_logger()
-        self.callbacks: list[Callback] = self._build_callbacks()
-        self.trainer: Trainer = self._build_trainer()
-
-        self.hparams["version"] = f"version_{self.logger.version}"
-
-    def _build_trainer(self) -> Trainer:
-        return Trainer(
-            max_epochs=self.hparams.get("max_epochs", 100),
-            accelerator=self.hparams.get("accelerator", "auto"),
-            devices=self.hparams.get("devices", 1),
-            precision=self.hparams.get("precision", "32-true"),
-            log_every_n_steps=self.hparams.get("log_every_n_steps", 5),
-            logger=self.logger,
-            callbacks=self.callbacks,
-            deterministic=True,
-        )
-
-    def _build_logger(self) -> TensorBoardLogger:
-        return TensorBoardLogger(
-            save_dir=self.hparams.get("log_dir", "runs/"),
-            name=self.hparams.get("experiment_name", "test/"),
-            default_hp_metric=False,
-        )
-
-    def _build_callbacks(self) -> list[Callback]:
-        callbacks: list[Callback] = [
-            ModelCheckpoint(
-                monitor=self.hparams.get("monitor_metric", "valid/3_total"),
-                save_top_k=1,
-                mode=self.hparams.get("monitor_mode", "min"),
-                filename="best",
-                save_last=True,
-            ),
-            ModelCheckpoint(
-                every_n_epochs=5,
-                save_top_k=-1,
-                filename="epoch-{epoch:02d}",
-            ),
-            EarlyStopping(
-                monitor=self.hparams.get("monitor_metric", "valid/3_total"),
-                patience=self.hparams.get("patience", 25),
-                mode=self.hparams.get("monitor_mode", "min"),
-                verbose=True,
-            ),
-            LearningRateMonitor(logging_interval="step"),
-        ]
-        return callbacks
+            self.model = model_class(
+                params=self.params,
+            )
 
     def _create_and_run_runner(
         self,
@@ -95,8 +39,7 @@ class LightningEngine:
     ) -> None:
         runner: _BaseRunner = runner_class(
             model=self.model,
-            trainer=self.trainer,
-            hparams=self.hparams,
+            params=self.params,
         )
         runner.run()
 

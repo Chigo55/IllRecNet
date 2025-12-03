@@ -14,13 +14,22 @@ class SeparationBlock(nn.Module):
         pad_size = kernel_size // 2
         self.pad = nn.ReflectionPad2d(padding=pad_size)
 
-        kernel_1d = self._get_gaussian_kernel_1d(kernel_size=kernel_size, sigma=sigma,)
+        kernel_1d = self._get_gaussian_kernel_1d(
+            kernel_size=kernel_size,
+            sigma=sigma,
+        )
 
         self.conv_y = nn.Conv2d(
-            in_channels=1, out_channels=1, kernel_size=(kernel_size, 1), bias=False,
+            in_channels=1,
+            out_channels=1,
+            kernel_size=(kernel_size, 1),
+            bias=False,
         )
         self.conv_x = nn.Conv2d(
-            in_channels=1, out_channels=1, kernel_size=(1, kernel_size), bias=False,
+            in_channels=1,
+            out_channels=1,
+            kernel_size=(1, kernel_size),
+            bias=False,
         )
 
         with torch.no_grad():
@@ -54,8 +63,8 @@ class SeparationBlock(nn.Module):
 
         re_log = x_log - il_log
 
-        il = torch.exp(input=il_log)
-        re = torch.exp(input=re_log)
+        il = torch.exp(input=il_log).clamp(min=0.0, max=1.0)
+        re = torch.exp(input=re_log).clamp(min=0.0, max=1.0)
 
         il = il.type_as(other=x)
         re = re.type_as(other=x)

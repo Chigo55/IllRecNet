@@ -43,7 +43,7 @@ def save_images(
         save_path_str: str = make_dirs(path=f"{out_dir}/batch{i + 1}")
         for ii, batch in enumerate(iterable=datasets):
             save_image(
-                tensor=batch,  # `save_image` can take Path, but str is fine
+                tensor=batch,
                 fp=f"{save_path_str}/{prefix}_{ii:04d}.{ext}",
                 nrow=8,
                 padding=2,

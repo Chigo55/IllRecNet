@@ -1,77 +1,94 @@
 ﻿# IllRecNet
 
-Low-light image enhancement pipeline that decomposes illumination with homomorphic filtering, restores chroma and reflectance details, and re-composes enhanced RGB outputs. The implementation uses PyTorch Lightning for training, validation, benchmarking, and inference.
+An experimental low-light image enhancement pipeline built with PyTorch and Lightning. This project uses an Encoder-Decoder architecture with self-attention and cross-attention mechanisms to restore and enhance images from low-light conditions. The core idea is to separate illumination and reflectance components, enhance them in a learned feature space, and reconstruct the final image.
 
 ## Repository Layout
 
 ```
 .
 ├── data/
-│   ├── __init__.py
 │   ├── dataloader.py
 │   └── utils.py
 ├── engine/
-│   ├── __init__.py
 │   ├── engine.py
 │   └── runner.py
 ├── model/
-│   ├── __init__.py
 │   ├── model.py
 │   ├── loss.py
 │   └── blocks/
-│       ├── __init__.py
-│       ├── featurerestorer.py
-│       ├── homomorphic.py
-│       ├── illuminationenhancer.py
-│       └── lowlightenhancer.py
+│       ├── attention.py
+│       ├── enhancer.py
+│       ├── flatten.py
+│       ├── sampling.py
+│       └── separation.py
 ├── utils/
-│   ├── __init__.py
 │   ├── metrics.py
 │   └── utils.py
-├── main.py
-├── .gitignore
-├── .python-version
+├── train.py
+├── valid.py
+├── bench.py
+├── infer.py
 ├── pyproject.toml
 ├── requirements.txt
 └── README.md
 ```
 
-## Environment Management (UV)
+## Environment Management
 
-This project uses [UV](https://github.com/astral-sh/uv) for Python environment and dependency management.
+This project supports both `uv` and `pip` for environment management.
+
+### Using `uv` (Recommended)
+
+[UV](https://github.com/astral-sh/uv) is a fast Python package installer and resolver.
 
 ```bash
-# create and sync the environment
+# Create and sync the environment from pyproject.toml
 uv sync
 
-# run commands inside the environment
-uv run python main.py
+# Activate the virtual environment
+source .venv/bin/activate
 
-# add or update dependencies
-uv add <package>
-uv lock
+# Run a script
+python train.py
 ```
 
-Requirements remain in
-`requirements.txt` for compatibility with other workflows, but `uv sync` is the canonical way to reproduce the environment described in `pyproject.toml` and `uv.lock`.
+### Using `pip`
+
+```bash
+# Create a virtual environment
+python -m venv .venv
+
+# Activate the virtual environment
+# On Windows
+# .venv\Scripts\activate
+# On macOS/Linux
+source .venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
 
 ## Architecture Overview
 
-| Stage | File | Description |
+The model is an `Enhancer` composed of an `Encoder` and a `Decoder`.
+
+| Component | File | Description |
 | --- | --- | --- |
-| Data loading | data/utils.py, data/dataloader.py | LowLightDataset pairs low and high images; LowLightDataModule builds loaders for train, valid, bench, infer splits. |
-| Homomorphic separation | model/blocks/homomorphic.py | Converts RGB and YCrCb and splits illumination and reflectance via a learned homomorphic filter. |
-| Illumination enhancement | model/blocks/illuminationenhancer.py | U-Net style convolutional stack that brightens the illumination map. |
-| Feature restoration | model/blocks/featurerestorer.py | Restores chroma and reflectance through residual double-convolution blocks. |
-| Recomposition | model/blocks/lowlightenhancer.py | Combines restored components, clamps outputs, and returns structured tensors. |
-| Lightning wrapper | model/model.py | Aggregates the pipeline, computes MAE, MSE, SSIM losses, logs metrics, and configures optimisers. |
-| Engine and runners | engine/engine.py, engine/runner.py | LightningEngine seeds, logs, and holds a single model instance; stage runners reuse that instance so validation, benchmarking, and inference use trained weights. |
-| Metrics and utilities | utils/metrics.py, utils/utils.py | Quality metrics (PSNR, SSIM, LPIPS, NIQE, BRISQUE) and helpers for saving images, printing metrics, and summarising models. |
+| **Data Loading** | `data/dataloader.py` | `LowLightDataModule` creates data loaders for train, validation, benchmark, and inference stages. |
+| **Separation Block** | `model/blocks/separation.py` | Approximates homomorphic filtering by using a Gaussian kernel to separate each color channel into illumination and reflectance maps. |
+| **Encoder** | `model/blocks/enhancer.py` | Processes the separated illumination and reflectance maps using self-attention and cross-attention blocks to produce a contextual feature map. |
+| **Decoder** | `model/blocks/enhancer.py` | A U-Net-like structure with cross-attention that takes the original image and the encoder's context map to reconstruct the enhanced image. It uses skip connections and attention at multiple resolutions. |
+| **Attention Blocks**| `model/blocks/attention.py` | `SelfAttentionBlock` and `CrossAttentionBlock` are the core transformer-based components for feature processing. |
+| **Lightning Wrapper** | `model/model.py` | `LowLightEnhancerLightning` wraps the `Enhancer` model. It defines the loss functions (MAE, MSE), the optimization logic (AdamW with cosine warmup), and the training/validation/testing steps. |
+| **Engine** | `engine/engine.py` | The `LightningEngine` provides a clean interface to run training, validation, benchmarking, and inference by handling the PyTorch Lightning `Trainer` setup. |
+| **Runners** | `train.py`, `valid.py`, `bench.py`, `infer.py` | Individual scripts for each pipeline stage. Each script configures its hyperparameters and invokes the `LightningEngine`. |
+| **Metrics** | `utils/metrics.py` | Computes image quality metrics like PSNR, SSIM, LPIPS, NIQE, and BRISQUE. |
 
 ## Dataset Expectation
 
-Each split directory can contain multiple datasets. Inside each dataset folder you must provide matching low/ and high/ subfolders. Example layout:
+The pipeline expects a specific directory structure for the datasets. Each split (`1_train`, `2_valid`, etc.) can contain multiple sub-datasets (e.g., `LOLv1`, `LOLv2`). Inside each sub-dataset, you must provide matching `low/` and `high/` subfolders.
 
+Example layout:
 ```
 data/
 ├── 1_train/
@@ -91,58 +108,57 @@ data/
         ├── low/
         └── high/
 ```
-
-File names inside corresponding low/ and high/ directories must align (for example 0001.png should exist in both).
+File names inside corresponding `low/` and `high/` directories must be identical (e.g., `001.png`).
 
 ## Running the Pipeline
 
-```python
-from engine import LightningEngine
-from model.model import LowLightEnhancerLightning
-from main import get_hparams
+Activate your virtual environment and run the desired script. Each script is a standalone entry point for a specific task.
 
-engine = LightningEngine(
-    model_class=LowLightEnhancerLightning,
-    hparams=get_hparams(),
-)
-engine.train()   # fits the model
-engine.valid()   # evaluates on validation data
-engine.bench()   # reports PSNR, SSIM, LPIPS, NIQE, BRISQUE
-engine.infer()   # saves enhanced images for inference data
+### Training
+
+The `train.py` script starts the training process. By default, it runs two training sessions: one with the separation block frozen and one with it being trainable.
+
+```bash
+python train.py
 ```
 
-### Resuming or Inference from a Checkpoint
+### Validation
 
-```python
-engine = LightningEngine(
-    model_class=LowLightEnhancerLightning,
-    hparams=get_hparams(),
-    checkpoint_path="runs/example/best-epoch.ckpt",
-)
+To evaluate the model on the validation set during or after training, use `valid.py`. You must provide a path to a model checkpoint.
+
+```bash
+python valid.py --checkpoint_path="path/to/your/checkpoint.ckpt"
 ```
+
+### Benchmarking
+
+To get quantitative metrics (PSNR, SSIM, etc.) on the benchmark dataset, use `bench.py`.
+
+```bash
+python bench.py --checkpoint_path="path/to/your/checkpoint.ckpt"
+```
+
+### Inference
+
+To generate enhanced images from the inference set, use `infer.py`. The enhanced images will be saved in the `runs/<experiment_name>/inference` directory.
+
+```bash
+python infer.py --checkpoint_path="path/to/your/checkpoint.ckpt"
+```
+*Note: The runner scripts (`valid.py`, `bench.py`, `infer.py`) are not fully implemented to accept CLI arguments yet. You may need to modify the `get_hparams` function in each file to set the checkpoint path manually.*
 
 ## Hyperparameters
 
-main.py exposes get_hparams(); it returns a dictionary that contains everything the engine runners need. The default keys cover:
+Hyperparameters for each stage are defined in a `get_hparams()` function within the corresponding script (`train.py`, `valid.py`, etc.). Key hyperparameters in `train.py` include:
 
-- **Data**: 	train_data_path, valid_data_path, bench_data_path, infer_data_path, image_size, batch_size,
-um_workers.
-- **Training loop**: seed, max_epochs, accelerator, devices, precision, log_every_n_steps, log_dir, experiment_name, inference (subdirectory name for predictions), patience (early stopping).
-- **Model configuration**: hidden_channels,
-um_resolution, dropout_ratio,
-aw_cutoff, offset, 	rainable (whether to train homomorphic filters / down-sampling convs).
-- **Optimiser**: optim (string name). Optional keys such as lr, momentum, betas, etc., are consumed inside configure_optimizers depending on which optimiser you choose.
-
-The sample script loops over several optimiser options to compare performance. If you only need one configuration, remove the loop and set the desired optimiser and hyperparameters directly in get_hparams() or via CLI/environment overrides.
+- **Data**: `train_data_path`, `valid_data_path`, `image_size`, `batch_size`.
+- **Training**: `seed`, `max_epochs`, `accelerator`, `precision`, `log_dir`, `experiment_name`, `patience` (for early stopping).
+- **Model**: `embed_dim`, `num_heads`, `mlp_ratio`, `num_resolution`, `dropout_ratio`.
+- **Optimizer**: Learning rate, betas, weight decay, and other optimizer-specific parameters are configured inside the `configure_optimizers` method in `model/model.py`.
 
 ## Metrics and Logging
 
-- Metrics are computed through utils/metrics.py and logged by Lightning.
-- TensorBoard logs and checkpoints are stored under log_dir/experiment_name (defaults to runs/<experiment>).
-- The best checkpoint is tracked using the validation total loss (valid/4_total).
-
-## Notes
-
-- Designed for research and experimentation; additional robustness checks are recommended before production deployment.
-- Utility helpers (utils/utils.py) cover image saving, metric printing, directory creation, parameter counting, and model summaries.
-- Loss wrappers in model/loss.py can be extended for custom objectives.
+- Training and validation losses are logged to TensorBoard.
+- Image quality metrics (PSNR, SSIM, etc.) are calculated during the `test` step (used by `bench.py`).
+- Logs and checkpoints are saved to `log_dir/experiment_name`. By default, this is `runs/train/`.
+- The best checkpoint is saved based on the `valid/3_total` loss.
