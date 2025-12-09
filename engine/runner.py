@@ -29,33 +29,44 @@ class _BaseRunner(ABC):
         self.datamodule_params: dict[str, Any] = self.runner_params["datamodule"]
         self.trainer_params: dict[str, Any] = self.runner_params["trainer"]
 
-        self.set_values()
+        self.set_values(
+            logger_params=self.logger_params,
+            callbacks_params=self.callbacks_params,
+            datamodule_params=self.datamodule_params,
+            trainer_params=self.trainer_params,
+        )
 
         self.trainer: Trainer = self._build_trainer()
         self.datamodule: LightningDataModule = self._build_datamodule()
 
-    def set_values(self) -> None:
+    def set_values(
+        self,
+        logger_params: dict[str, Any],
+        callbacks_params: dict[str, Any],
+        datamodule_params: dict[str, Any],
+        trainer_params: dict[str, Any],
+    ) -> None:
         # logger
-        self.save_dir = self.logger_params.get("save_dir", "runs/")
-        self.experiment = self.logger_params.get("experiment", "test/")
-        self.inference = self.logger_params.get("inference", "inference/")
+        self.save_dir = logger_params.get("save_dir", "runs/")
+        self.experiment = logger_params.get("experiment", "test/")
+        self.inference = logger_params.get("inference", "inference/")
         # callbacks
-        self.monitor = self.callbacks_params.get("monitor", "valid/3_total")
-        self.patience = self.callbacks_params.get("patience", 25)
+        self.monitor = callbacks_params.get("monitor", "valid/3_total")
+        self.patience = callbacks_params.get("patience", 25)
         # datamodule
-        self.train_dir = self.datamodule_params.get("train_dir", "data/1_train")
-        self.valid_dir = self.datamodule_params.get("valid_dir", "data/2_valid")
-        self.bench_dir = self.datamodule_params.get("bench_dir", "data/3_bench")
-        self.infer_dir = self.datamodule_params.get("infer_dir", "data/4_infer")
-        self.image_size = self.datamodule_params.get("image_size", 256)
-        self.batch_size = self.datamodule_params.get("batch_size", 16)
-        self.num_workers = self.datamodule_params.get("num_workers", 10)
+        self.train_dir = datamodule_params.get("train_dir", "data/1_train")
+        self.valid_dir = datamodule_params.get("valid_dir", "data/2_valid")
+        self.bench_dir = datamodule_params.get("bench_dir", "data/3_bench")
+        self.infer_dir = datamodule_params.get("infer_dir", "data/4_infer")
+        self.image_size = datamodule_params.get("image_size", 256)
+        self.batch_size = datamodule_params.get("batch_size", 16)
+        self.num_workers = datamodule_params.get("num_workers", 10)
         # trainer
-        self.accelerator = self.trainer_params.get("accelerator", "auto")
-        self.devices = self.trainer_params.get("devices", 1)
-        self.precision = self.trainer_params.get("precision", "32-true")
-        self.max_epochs = self.trainer_params.get("max_epochs", 100)
-        self.log_every_n_steps = self.trainer_params.get("log_every_n_steps", 5)
+        self.accelerator = trainer_params.get("accelerator", "auto")
+        self.devices = trainer_params.get("devices", 1)
+        self.precision = trainer_params.get("precision", "32-true")
+        self.max_epochs = trainer_params.get("max_epochs", 100)
+        self.log_every_n_steps = trainer_params.get("log_every_n_steps", 5)
         self.logger = self._build_logger()
         self.callbacks = self._build_callbacks()
 
@@ -100,6 +111,7 @@ class _BaseRunner(ABC):
     def _build_trainer(self) -> Trainer:
         return Trainer(
             accelerator=self.accelerator,
+            strategy="ddp_find_unused_parameters_true",
             devices=self.devices,
             precision=self.precision,
             logger=self._build_logger(),

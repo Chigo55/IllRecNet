@@ -45,12 +45,15 @@ class LowLightDataset(Dataset[tuple[Tensor, Tensor]]):
                 low=low_image,
                 high=high_image,
             )
-
         if self.crop:
             low_image, high_image = self._pair_random_crop(
                 low=low_image,
                 high=high_image,
                 patch_size=self.image_size,
+            )
+        else:
+            low_image, high_image = self._pad_to_multiple(
+                low=low_image, high=high_image, multiple=32
             )
 
         return F.to_tensor(pic=low_image), F.to_tensor(pic=high_image)
@@ -68,6 +71,11 @@ class LowLightDataset(Dataset[tuple[Tensor, Tensor]]):
             low = F.vflip(img=low)  # type: ignore
             high = F.vflip(img=high)  # type: ignore
 
+        k = random.randint(0, 3)
+        if k > 0:
+            low = F.rotate(img=low, angle=k * 90)  # type: ignore
+            high = F.rotate(img=high, angle=k * 90)  # type: ignore
+
         return low, high
 
     def _pair_random_crop(
@@ -79,20 +87,22 @@ class LowLightDataset(Dataset[tuple[Tensor, Tensor]]):
         w, h = low.size
 
         if w < patch_size or h < patch_size:
-            low = F.resize(
-                img=low,  # type: ignore
-                size=[patch_size, patch_size],
-                interpolation=F.InterpolationMode.BICUBIC,
-            )
-            high = F.resize(
-                img=high,  # type: ignore
-                size=[patch_size, patch_size],
-                interpolation=F.InterpolationMode.BICUBIC,
-            )
-            return low, high
+            pad_w = max(0, patch_size - w)
+            pad_h = max(0, patch_size - h)
 
-        if w == patch_size and h == patch_size:
-            return low, high
+            padding = (0, 0, pad_w, pad_h)
+            low = F.pad(
+                img=low,  # type: ignore
+                padding=padding,  # type: ignore
+                padding_mode="reflect",
+            )
+            high = F.pad(
+                img=high,  # type: ignore
+                padding=padding,  # type: ignore
+                padding_mode="reflect",
+            )
+
+            w, h = low.size
 
         left = random.randint(a=0, b=w - patch_size)
         top = random.randint(a=0, b=h - patch_size)
@@ -110,6 +120,35 @@ class LowLightDataset(Dataset[tuple[Tensor, Tensor]]):
             left=left,
             height=patch_size,
             width=patch_size,
+        )
+
+        return low, high
+
+    def _pad_to_multiple(
+        self,
+        low: Image.Image,
+        high: Image.Image,
+        multiple: int = 32,
+    ) -> tuple[Image.Image, Image.Image]:
+        w, h = low.size
+
+        pad_w = (multiple - (w % multiple)) % multiple
+        pad_h = (multiple - (h % multiple)) % multiple
+
+        if pad_w == 0 and pad_h == 0:
+            return low, high
+
+        padding = (0, 0, pad_w, pad_h)
+
+        low = F.pad(
+            img=low,  # type: ignore
+            padding=padding,  # type: ignore
+            padding_mode="reflect",
+        )
+        high = F.pad(
+            img=high,  # type: ignore
+            padding=padding,  # type: ignore
+            padding_mode="reflect",
         )
 
         return low, high

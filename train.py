@@ -4,8 +4,6 @@ from typing import Any
 from engine.engine import LightningEngine
 from model.model import LowLightEnhancerLightning
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-
 
 def get_params() -> dict[str, Any]:
     params: dict[str, dict[str, Any]] = {
@@ -24,28 +22,28 @@ def get_params() -> dict[str, Any]:
                 "valid_dir": "data/2_valid",
                 "bench_dir": "data/3_bench",
                 "infer_dir": "data/4_infer",
-                "image_size": 256,
-                "batch_size": 32,
+                "image_size": 512,
+                "batch_size": 4,
                 "num_workers": 10,
             },
             "trainer": {
                 "accelerator": "auto",
-                "devices": 1,
+                "devices": 2,
                 "precision": "16-mixed",
                 "max_epochs": 100,
                 "log_every_n_steps": 5,
-            }
+            },
         },
         "model": {
             "hyper": {
                 "channels": 3,
                 "kernel_size": 15,
                 "sigma": 5,
-                "embed_dim": 8,
-                "num_heads": 2,
-                "mlp_ratio": 1,
-                "num_resolution": 2,
-                "dropout_ratio": 0.2,
+                "embed_dim": 64,
+                "num_heads": 8,
+                "mlp_ratio": 4,
+                "num_resolution": 4,
+                "dropout_ratio": 0.0,
             },
             "optimizer": {
                 "lr": 1e-4,
@@ -62,13 +60,45 @@ def get_params() -> dict[str, Any]:
 def main() -> None:
     params: dict[str, Any] = get_params()
 
+    params["model"]["hyper"]["embed_dim"] = 64
+    params["model"]["hyper"]["num_heads"] = 8
+    params["model"]["hyper"]["mlp_ratio"] = 4
+    params["model"]["hyper"]["num_resolution"] = 4
+
     engine: LightningEngine = LightningEngine(
         model_class=LowLightEnhancerLightning,
         checkpoint_path=None,
         params=params,
     )
     engine.train()
-    engine.valid()
+    engine.bench()
+    engine.infer()
+
+    params["model"]["hyper"]["embed_dim"] = 32
+    params["model"]["hyper"]["num_heads"] = 4
+    params["model"]["hyper"]["mlp_ratio"] = 2
+    params["model"]["hyper"]["num_resolution"] = 3
+
+    engine: LightningEngine = LightningEngine(
+        model_class=LowLightEnhancerLightning,
+        checkpoint_path=None,
+        params=params,
+    )
+    engine.train()
+    engine.bench()
+    engine.infer()
+
+    params["model"]["hyper"]["embed_dim"] = 16
+    params["model"]["hyper"]["num_heads"] = 2
+    params["model"]["hyper"]["mlp_ratio"] = 1
+    params["model"]["hyper"]["num_resolution"] = 2
+
+    engine: LightningEngine = LightningEngine(
+        model_class=LowLightEnhancerLightning,
+        checkpoint_path=None,
+        params=params,
+    )
+    engine.train()
     engine.bench()
     engine.infer()
 

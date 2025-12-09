@@ -40,6 +40,8 @@ class LowLightEnhancerLightning(L.LightningModule):
         self.mse_loss: MeanSquaredError = MeanSquaredError().eval()
 
         self.metric: ImageQualityMetrics = ImageQualityMetrics().eval()
+        for param in self.metric.parameters():
+            param.requires_grad = False
 
     def forward(
         self,
@@ -180,7 +182,7 @@ class LowLightEnhancerLightning(L.LightningModule):
 
     def configure_optimizers(self) -> tuple[list[Optimizer], list[dict[str, Any]]]:
         optimizer: Optimizer = AdamW(
-            params=self.parameters(),
+            params=self.model.parameters(),
             lr=self.lr,
             betas=self.betas,
             eps=self.eps,
