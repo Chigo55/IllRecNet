@@ -3,13 +3,13 @@ from pathlib import Path
 from typing import Any, cast
 
 from lightning import LightningDataModule, LightningModule, Trainer
-from lightning.pytorch.loggers import TensorBoardLogger
 from lightning.pytorch.callbacks import (
     Callback,
     EarlyStopping,
     LearningRateMonitor,
     ModelCheckpoint,
 )
+from lightning.pytorch.loggers import TensorBoardLogger
 from torch import Tensor
 
 from data.dataloader import LowLightDataModule
@@ -111,7 +111,6 @@ class _BaseRunner(ABC):
     def _build_trainer(self) -> Trainer:
         return Trainer(
             accelerator=self.accelerator,
-            strategy="ddp_find_unused_parameters_true",
             devices=self.devices,
             precision=self.precision,
             logger=self._build_logger(),

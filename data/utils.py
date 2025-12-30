@@ -35,7 +35,7 @@ class LowLightDataset(Dataset[tuple[Tensor, Tensor]]):
         index: int,
     ) -> tuple[Tensor, Tensor]:
         low_data: Path = self.low_datas[index]
-        high_data: Path = self.high_path / low_data.name
+        high_data: Path = self.high_datas[index]
 
         low_image: Image.Image = Image.open(fp=low_data).convert(mode="RGB")
         high_image: Image.Image = Image.open(fp=high_data).convert(mode="RGB")
@@ -83,7 +83,7 @@ class LowLightDataset(Dataset[tuple[Tensor, Tensor]]):
         low: Image.Image,
         high: Image.Image,
         patch_size: int,
-    ) -> tuple[Image.Image, Image.Image]:
+    ) -> tuple[Tensor, Tensor]:
         w, h = low.size
 
         if w < patch_size or h < patch_size:

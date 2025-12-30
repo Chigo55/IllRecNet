@@ -8,7 +8,7 @@ class MultiLayerPerceptron(nn.Module):
         embed_dim: int,
         mlp_ratio: int,
         dropout_ratio: float,
-    ):
+    ) -> None:
         super().__init__()
         self.layer_norm = nn.LayerNorm(normalized_shape=embed_dim)
         self.mlp = nn.Sequential(
@@ -42,7 +42,7 @@ class SelfAttention(nn.Module):
         embed_dim: int,
         num_heads: int,
         dropout_ratio: float,
-    ):
+    ) -> None:
         super().__init__()
         self.layer_norm = nn.LayerNorm(normalized_shape=embed_dim)
         self.attn = nn.MultiheadAttention(
@@ -68,7 +68,7 @@ class SelfAttentionBlock(nn.Module):
         num_heads: int,
         mlp_ratio: int,
         dropout_ratio: float,
-    ):
+    ) -> None:
         super().__init__()
         self.attn = SelfAttention(
             embed_dim=embed_dim,
@@ -96,7 +96,7 @@ class CrossAttention(nn.Module):
         embed_dim: int,
         num_heads: int,
         dropout_ratio: float,
-    ):
+    ) -> None:
         super().__init__()
         self.layer_norm = nn.LayerNorm(normalized_shape=embed_dim)
         self.attn = nn.MultiheadAttention(
@@ -123,7 +123,7 @@ class CrossAttentionBlock(nn.Module):
         num_heads: int,
         mlp_ratio: int,
         dropout_ratio: float,
-    ):
+    ) -> None:
         super().__init__()
         self.attn = CrossAttention(
             embed_dim=embed_dim,

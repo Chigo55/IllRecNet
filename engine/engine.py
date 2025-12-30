@@ -1,6 +1,7 @@
 from typing import Any
 
 from lightning import LightningModule
+
 from engine.runner import (
     LightningBenchmarker,
     LightningInferencer,

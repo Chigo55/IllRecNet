@@ -174,10 +174,9 @@ cython_debug/
 .pypirc
 
 # Custom .gitignore
-data/1_train/*
-data/2_valid/*
-data/3_bench/*
-data/4_infer/*
+data/01_LOLv1/*
+data/02_LOLv2real/*
+data/03_LOLv2synthetic/*
 data/database/*
 runs/*
 test/*

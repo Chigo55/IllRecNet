@@ -1,11 +1,10 @@
-from typing import Any, Literal, Sequence
+from typing import Any, Literal
 
 import lightning as L
 import torch
 from torch import Tensor
-from torch.optim.adamw import AdamW
+from torch.optim.adam import Adam
 from torch.optim.optimizer import Optimizer
-from transformers import get_cosine_schedule_with_warmup
 
 from model.blocks.enhancer import Enhancer
 from model.loss import MeanAbsoluteError, MeanSquaredError
@@ -101,9 +100,6 @@ class LowLightEnhancerLightning(L.LightningModule):
         loss_dict: dict[str, Tensor],
         batch_idx: int,
     ) -> None:
-        if batch_idx % 25 != 0:
-            return
-
         self.logger.experiment.add_images(f"{stage}/results", outputs, self.global_step)
 
         logs: dict[str, Tensor] = {}
@@ -180,8 +176,8 @@ class LowLightEnhancerLightning(L.LightningModule):
         results = self.forward(low=low_img)
         return torch.clip(input=results, min=0, max=1)
 
-    def configure_optimizers(self) -> tuple[list[Optimizer], list[dict[str, Any]]]:
-        optimizer: Optimizer = AdamW(
+    def configure_optimizers(self) -> Optimizer:
+        optimizer: Optimizer = Adam(
             params=self.model.parameters(),
             lr=self.lr,
             betas=self.betas,
@@ -189,19 +185,4 @@ class LowLightEnhancerLightning(L.LightningModule):
             weight_decay=self.weight_decay,
         )
 
-        total_training_steps = int(self.trainer.estimated_stepping_batches)
-        num_warmup_steps = max(1, int(total_training_steps * self.warmup_ratio))
-
-        scheduler = get_cosine_schedule_with_warmup(
-            optimizer=optimizer,
-            num_warmup_steps=num_warmup_steps,
-            num_training_steps=total_training_steps,
-        )
-
-        sched_cfg: dict[str, Any] = {
-            "scheduler": scheduler,
-            "interval": "step",
-            "frequency": 1,
-        }
-
-        return [optimizer], [sched_cfg]
+        return optimizer

@@ -1,7 +1,7 @@
 from torch import Tensor
 
 
-def Flatten(x: Tensor):
+def Flatten(x: Tensor) -> Tensor:
     return x.flatten(start_dim=2, end_dim=3).permute(0, 2, 1)
 
 

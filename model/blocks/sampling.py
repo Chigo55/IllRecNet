@@ -15,7 +15,7 @@ class Downsampling(nn.Module):
             kernel_size=2,
             stride=2,
             padding=0,
-            bias=False,
+            bias=True,
         )
 
     def forward(
@@ -38,7 +38,7 @@ class Upsampling(nn.Module):
             kernel_size=2,
             stride=2,
             padding=0,
-            bias=False,
+            bias=True,
         )
 
     def forward(
