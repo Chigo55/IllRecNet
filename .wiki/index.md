@@ -15,6 +15,8 @@
 ## Pattern
 | 페이지 | 요약 | 갱신 |
 |--------|------|------|
+| [[.wiki/pattern/registry-factory]] | 구성 딕셔너리 기반 클래스 동적 생성을 위한 Registry 및 Factory 패턴 | 2026-04-22 |
+| [[.wiki/pattern/lightning-pipeline]] | PyTorch Lightning과 Runner 래퍼를 통한 파이프라인 보일러플레이트 제거 | 2026-04-22 |
 
 ## Domain
 | 페이지 | 요약 | 갱신 |
@@ -46,3 +48,4 @@
 ## Summary
 | 페이지 | 요약 | 갱신 |
 |--------|------|------|
+| [[.wiki/summary/illrecnet-architecture]] | IllRecNet 아키텍처 개요 (분리 블록, 어텐션, 손실 함수 등) | 2026-04-22 |
