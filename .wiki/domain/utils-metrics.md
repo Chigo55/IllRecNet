@@ -2,7 +2,7 @@
 
 > **관련 문서**: [[.wiki/index]]
 
-**생성**: 2025-02-18  **갱신**: 2025-02-18
+**생성**: 2026-04-22  **갱신**: 2026-04-22
 **분류**: domain
 **태그**: `#utils` `#metrics` `#pyiqa`
 
@@ -26,4 +26,4 @@
 Reference 기반과 No-Reference 기반 지표를 모두 계산하고 결과를 병합하여 하나의 딕셔너리로 반환. 벤치마크/테스트 시 주로 활용됨.
 
 ## 연결
-- [[.wiki/model-model]] — `LowLightEnhancerLightning` 내부에서 정량적 평가를 위해 사용.
+- [[.wiki/domain/model-model]] — `LowLightEnhancerLightning` 내부에서 정량적 평가를 위해 사용.

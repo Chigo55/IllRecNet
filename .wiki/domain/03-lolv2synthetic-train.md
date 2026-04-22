@@ -2,7 +2,7 @@
 
 > **관련 문서**: [[.wiki/index]]
 
-**생성**: 2025-02-18  **갱신**: 2025-02-18
+**생성**: 2026-04-22  **갱신**: 2026-04-22
 **분류**: domain
 **태그**: `#train` `#script` `#lolv2synthetic`
 
@@ -26,5 +26,5 @@ LOLv2-synthetic 데이터셋을 사용하여 LowLightEnhancerLightning 모델을
 - 다른 스크립트와 달리 `os.environ["CUDA_VISIBLE_DEVICES"]` 설정이 포함되어 있지 않음.
 
 ## 연결
-- [[.wiki/engine-engine]] — Lightning 엔진 실행.
-- [[.wiki/model-model]] — 모델 클래스 참조.
+- [[.wiki/domain/engine-engine]] — Lightning 엔진 실행.
+- [[.wiki/domain/model-model]] — 모델 클래스 참조.

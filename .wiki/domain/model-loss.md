@@ -2,7 +2,7 @@
 
 > **관련 문서**: [[.wiki/index]]
 
-**생성**: 2025-02-18  **갱신**: 2025-02-18
+**생성**: 2026-04-22  **갱신**: 2026-04-22
 **분류**: domain
 **태그**: `#model` `#loss`
 
@@ -20,4 +20,4 @@ PyTorch의 `nn.MSELoss`를 상속받는 클래스. 픽셀 간 제곱 오차(MSE)
 > **참고**: `LowLightEnhancerLightning`에서는 이 두 손실의 합을 최종 목적 함수로 사용.
 
 ## 연결
-- [[.wiki/model-model]] — 이 손실 함수들을 결합하여 사용하는 Lightning 모듈.
+- [[.wiki/domain/model-model]] — 이 손실 함수들을 결합하여 사용하는 Lightning 모듈.

@@ -2,7 +2,7 @@
 
 > **관련 문서**: [[.wiki/index]]
 
-**생성**: 2025-02-18  **갱신**: 2025-02-18
+**생성**: 2026-04-22  **갱신**: 2026-04-22
 **분류**: domain
 **태그**: `#bench` `#script`
 
@@ -26,5 +26,5 @@
 - 모델 성능 측정을 목적으로 하므로 `train_dir`, `valid_dir` 등의 경로는 일반적인 `data/` 하위를 가리킴.
 
 ## 연결
-- [[.wiki/engine-engine]] — 엔진의 벤치마크 기능 호출.
-- [[.wiki/model-model]] — 모델 아키텍처.
+- [[.wiki/domain/engine-engine]] — 엔진의 벤치마크 기능 호출.
+- [[.wiki/domain/model-model]] — 모델 아키텍처.

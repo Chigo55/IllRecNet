@@ -2,7 +2,7 @@
 
 > **관련 문서**: [[.wiki/index]]
 
-**생성**: 2025-02-18  **갱신**: 2025-02-18
+**생성**: 2026-04-22  **갱신**: 2026-04-22
 **분류**: domain
 **태그**: `#utils`
 
@@ -28,4 +28,4 @@
 Conv, Linear, BatchNorm 레이어에 대한 초기화 규칙(`xavier_normal_`, `constant_`)을 정의. `model.apply(weights_init)` 형식으로 사용.
 
 ## 연결
-- [[.wiki/engine-runner]] — 추론 완료 후 `save_images`를 사용해 디스크에 결과 저장.
+- [[.wiki/domain/engine-runner]] — 추론 완료 후 `save_images`를 사용해 디스크에 결과 저장.

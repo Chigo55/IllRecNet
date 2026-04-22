@@ -2,7 +2,7 @@
 
 > **관련 문서**: [[.wiki/index]]
 
-**생성**: 2025-02-18  **갱신**: 2025-02-18
+**생성**: 2026-04-22  **갱신**: 2026-04-22
 **분류**: domain
 **태그**: `#data` `#dataloader` `#lightning`
 
@@ -25,4 +25,4 @@ PyTorch Lightning의 `LightningDataModule`을 상속받아, 학습/검증/벤치
 - `persistent_workers`를 통해 데이터 로딩 오버헤드 최소화.
 
 ## 연결
-- [[.wiki/data-utils]] — `LowLightDataset` 데이터셋 클래스 의존.
+- [[.wiki/domain/data-utils]] — `LowLightDataset` 데이터셋 클래스 의존.

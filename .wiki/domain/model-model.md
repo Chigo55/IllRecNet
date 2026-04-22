@@ -2,7 +2,7 @@
 
 > **관련 문서**: [[.wiki/index]]
 
-**생성**: 2025-02-18  **갱신**: 2025-02-18
+**생성**: 2026-04-22  **갱신**: 2026-04-22
 **분류**: domain
 **태그**: `#model` `#lightning` `#enhancer`
 
@@ -31,6 +31,6 @@
 Adam 옵티마이저를 정의하고 반환. (lr, betas, weight_decay 등 하이퍼파라미터 적용)
 
 ## 연결
-- [[.wiki/model-blocks-enhancer]] — 코어 네트워크 `Enhancer` 정의.
-- [[.wiki/model-loss]] — 사용되는 MAE/MSE 손실.
-- [[.wiki/utils-metrics]] — 품질 평가 지표 모음.
+- [[.wiki/domain/model-blocks-enhancer]] — 코어 네트워크 `Enhancer` 정의.
+- [[.wiki/domain/model-loss]] — 사용되는 MAE/MSE 손실.
+- [[.wiki/domain/utils-metrics]] — 품질 평가 지표 모음.

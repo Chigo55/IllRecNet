@@ -2,7 +2,7 @@
 
 > **관련 문서**: [[.wiki/index]]
 
-**생성**: 2025-02-18  **갱신**: 2025-02-18
+**생성**: 2026-04-22  **갱신**: 2026-04-22
 **분류**: domain
 **태그**: `#valid` `#script`
 
@@ -22,5 +22,5 @@
 - CUDA 장치 `1`번 고정.
 
 ## 연결
-- [[.wiki/engine-engine]] — 검증 기능.
-- [[.wiki/model-model]] — 검증 모델.
+- [[.wiki/domain/engine-engine]] — 검증 기능.
+- [[.wiki/domain/model-model]] — 검증 모델.

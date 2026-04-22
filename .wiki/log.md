@@ -12,7 +12,7 @@
 - **생성**: [[.wiki/pattern/registry-factory]], [[.wiki/pattern/lightning-pipeline]], [[.wiki/summary/illrecnet-architecture]]
 - **index.md**: Pattern 및 Summary 카탈로그 항목 추가
 
-## [2025-02-18] ingest | Python Script Domains
+## [2026-04-22] ingest | Python Script Domains
 - **출처**: 19개 Python 소스 파일
 - **생성**: [[.wiki/domain/01-lolv1-train]] 외 18개 도메인 문서
 - **index.md**: Domain 카탈로그에 항목 추가

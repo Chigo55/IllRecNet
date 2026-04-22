@@ -2,7 +2,7 @@
 
 > **관련 문서**: [[.wiki/index]]
 
-**생성**: 2025-02-18  **갱신**: 2025-02-18
+**생성**: 2026-04-22  **갱신**: 2026-04-22
 **분류**: domain
 **태그**: `#train` `#script` `#lolv1`
 
@@ -28,5 +28,5 @@ LOLv1 데이터셋을 사용하여 LowLightEnhancerLightning 모델을 학습시
 - CUDA 장치를 `1`번으로 고정 (`os.environ["CUDA_VISIBLE_DEVICES"] = "1"`).
 
 ## 연결
-- [[.wiki/engine-engine]] — 학습 및 추론 엔진 구현.
-- [[.wiki/model-model]] — 모델 구조 및 Lightning 모듈 정의.
+- [[.wiki/domain/engine-engine]] — 학습 및 추론 엔진 구현.
+- [[.wiki/domain/model-model]] — 모델 구조 및 Lightning 모듈 정의.

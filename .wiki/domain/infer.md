@@ -2,7 +2,7 @@
 
 > **관련 문서**: [[.wiki/index]]
 
-**생성**: 2025-02-18  **갱신**: 2025-02-18
+**생성**: 2026-04-22  **갱신**: 2026-04-22
 **분류**: domain
 **태그**: `#infer` `#script`
 
@@ -23,5 +23,5 @@
 - CUDA 장치 `1`번 고정.
 
 ## 연결
-- [[.wiki/engine-engine]] — 추론 기능 호출.
-- [[.wiki/model-model]] — 추론할 모델.
+- [[.wiki/domain/engine-engine]] — 추론 기능 호출.
+- [[.wiki/domain/model-model]] — 추론할 모델.
