@@ -2,6 +2,10 @@
 
 > append-only. 최신이 상단. grep: `## \[`
 
+## [2026-04-22] lint | 전체 페이지 29개 점검
+- **발견**: ERROR 0개, WARN 0개
+- **조치**: 이슈 없음 (이전 작업에서 모두 수정됨)
+
 ## [2026-04-22] ingest | IllRecNet Overview MOC
 - **출처**: MOC 생성 요청
 - **생성**: [[.wiki/moc/illrecnet-overview]]
