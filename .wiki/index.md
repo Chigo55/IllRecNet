@@ -44,6 +44,7 @@
 ## MOC
 | 페이지 | 요약 | 갱신 |
 |--------|------|------|
+| [[.wiki/moc/illrecnet-overview]] | The central hub for navigating the IllRecNet low-light image enhancement project | 2026-04-22 |
 
 ## Summary
 | 페이지 | 요약 | 갱신 |

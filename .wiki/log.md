@@ -2,6 +2,11 @@
 
 > append-only. 최신이 상단. grep: `## \[`
 
+## [2026-04-22] ingest | IllRecNet Overview MOC
+- **출처**: MOC 생성 요청
+- **생성**: [[.wiki/moc/illrecnet-overview]]
+- **index.md**: MOC 카탈로그에 항목 추가
+
 ## [2026-04-22] ingest | Pattern and Summary docs
 - **출처**: codebase 리뷰 및 패턴화 작업
 - **생성**: [[.wiki/pattern/registry-factory]], [[.wiki/pattern/lightning-pipeline]], [[.wiki/summary/illrecnet-architecture]]
