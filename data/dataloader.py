@@ -103,7 +103,7 @@ class LowLightDataModule(L.LightningDataModule):
         return self._set_dataloader(
             dataset=self.valid_dataset,
             shuffle=False,
-            batch_size=1,
+            batch_size=self.batch_size,
         )
 
     def test_dataloader(self) -> DataLoader[tuple[Tensor, Tensor]] | None:

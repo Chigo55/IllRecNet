@@ -114,7 +114,7 @@ File names inside corresponding `low/` and `high/` directories must be identical
 
 Activate your virtual environment and run the desired script. Each script is a standalone entry point for a specific task.
 
-### Training
+### Train
 
 The `train.py` script starts the training process. By default, it runs two training sessions: one with the separation block frozen and one with it being trainable.
 
@@ -122,7 +122,7 @@ The `train.py` script starts the training process. By default, it runs two train
 python train.py
 ```
 
-### Validation
+### Valid
 
 To evaluate the model on the validation set during or after training, use `valid.py`. You must provide a path to a model checkpoint.
 
@@ -130,7 +130,7 @@ To evaluate the model on the validation set during or after training, use `valid
 python valid.py --checkpoint_path="path/to/your/checkpoint.ckpt"
 ```
 
-### Benchmarking
+### Bench
 
 To get quantitative metrics (PSNR, SSIM, etc.) on the benchmark dataset, use `bench.py`.
 
@@ -138,7 +138,7 @@ To get quantitative metrics (PSNR, SSIM, etc.) on the benchmark dataset, use `be
 python bench.py --checkpoint_path="path/to/your/checkpoint.ckpt"
 ```
 
-### Inference
+### Infer
 
 To generate enhanced images from the inference set, use `infer.py`. The enhanced images will be saved in the `runs/<experiment_name>/inference` directory.
 
